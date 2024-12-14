@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #89f7fe, #66a6ff);
+            color: #333;
+            text-align: center;
+        }
+
+        .welcome-container, .quiz-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            text-align: center;
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2 {
+            color: #007bff;
+        }
+
+        #progress-bar {
+            height: 10px;
+            background-color: #4caf50;
+            width: 0%;
+            margin-bottom: 20px;
+            transition: width 0.4s;
+            border-radius: 5px;
+        }
+
+        #question-number {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        #question-container {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        #options {
+            list-style-type: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        #options li {
+            padding: 10px;
+            background: #f1f1f1;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        #options li:hover {
+            background: #e0e0e0;
+        }
+
+        #options li input {
+            margin-right: 10px;
+        }
+
+        #timer-container {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #ff5722;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #result-container p {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+
+        .quote-container {
+            margin-top: 20px;
+            font-style: italic;
+            color: #666;
+        }
+
+        #retake-btn {
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container" id="welcome-container">
+        <h1>Welcome to the Quiz!</h1>
+        <p>Test your knowledge with our fun and engaging quiz.</p>
+        <button id="start-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div class="quiz-container hidden" id="quiz-container">
+        <div id="progress-bar"></div>
+        <div id="question-number"></div>
+        <div id="quiz">
+            <div id="question-container"></div>
+            <ul id="options"></ul>
+            <div id="timer-container"></div>
+            <button id="submit-btn" onclick="submitAnswer()">Submit</button>
+        </div>
+        <div id="result-container" class="hidden">
+            <h2>Quiz Complete!</h2>
+            <p>Your score is: <span id="score"></span></p>
+            <div class="quote-container">"Learning never exhausts the mind." - Leonardo da Vinci</div>
+            <button id="retake-btn" onclick="restartQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is 2 + 2?",
+                options: ["3", "4", "5", "6"],
+                correct: "4"
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Earth", "Mars", "Jupiter", "Saturn"],
+                correct: "Mars"
+            },
+            {
+                question: "Who wrote 'To Kill a Mockingbird'?",
+                options: ["Harper Lee", "Jane Austen", "Mark Twain", "F. Scott Fitzgerald"],
+                correct: "Harper Lee"
+            },
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Lisbon"],
+                correct: "Paris"
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+                correct: "Pacific"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timePerQuestion = 10;
+
+        function startQuiz() {
+            document.getElementById('welcome-container').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function loadQuestion(index) {
+            const questionNumber = document.getElementById('question-number');
+            const questionContainer = document.getElementById('question-container');
+            const optionsList = document.getElementById('options');
+            const timerContainer = document.getElementById('timer-container');
+
+            const question = questions[index];
+            questionNumber.textContent = `Question ${index + 1} of ${questions.length}`;
+            questionContainer.textContent = question.question;
+            optionsList.innerHTML = '';
+
+            question.options.forEach((option, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<input type="radio" name="answer" id="option${i}" value="${option}">
+                                <label for="option${i}">${option}</label>`;
+                optionsList.appendChild(li);
+            });
+
+            startTimer(timePerQuestion, timerContainer);
+        }
+
+        function startTimer(duration, display) {
+            let timer = duration;
+            const interval = setInterval(() => {
+                display.textContent = `Time left: ${timer}s`;
+
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    submitAnswer();
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                const correctAnswer = questions[currentQuestionIndex].correct;
+                if (selectedOption.value === correctAnswer) {
+                    score++;
+                }
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion(currentQuestionIndex);
+                } else {
+                    showResult();
+                }
+            } else {
+                alert('Please select an answer');
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+            document.getElementById('score').textContent = score;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            loadQuestion(currentQuestionIndex);
+        }
+    </script>
+</body>
+</html>
